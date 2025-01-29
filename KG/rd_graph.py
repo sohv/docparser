@@ -10,14 +10,11 @@ def connect_to_database(db_url):
 
 def build_knowledge_graph(metadata):
     G = nx.DiGraph()
-
     for table in metadata.tables.values():
         G.add_node(table.name, type="table")
-
         for column in table.columns:
             G.add_node(f"{table.name}.{column.name}", type="column")
             G.add_edge(table.name, f"{table.name}.{column.name}", relation="has_column")
-
     for table in metadata.tables.values():
         for column in table.columns:
             if column.foreign_keys:
@@ -47,7 +44,7 @@ def visualize_knowledge_graph(G):
     plt.title("Knowledge Graph of Relational Database Schema")
     plt.show()
 
-db_url = "mysql+pymysql://root:vedant3006@localhost/complex_db"
+db_url = "mysql+pymysql://root:password@localhost/complex_db"
 metadata = connect_to_database(db_url)
 G = build_knowledge_graph(metadata)
 visualize_knowledge_graph(G)
