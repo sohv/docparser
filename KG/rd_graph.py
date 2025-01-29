@@ -21,13 +21,11 @@ def build_knowledge_graph(metadata):
                 for fk in column.foreign_keys:
                     referenced_table = fk.column.table.name
                     G.add_edge(table.name, referenced_table, relation="foreign_key")
-
     return G
 
 def visualize_knowledge_graph(G):
     plt.figure(figsize=(12, 8))
     pos = nx.spring_layout(G)
-
     labels = {node: node for node in G.nodes()}
 
     table_nodes = [node for node, attr in G.nodes(data=True) if attr["type"] == "table"]
@@ -43,6 +41,8 @@ def visualize_knowledge_graph(G):
 
     plt.title("Knowledge Graph of Relational Database Schema")
     plt.show()
+
+    
 
 db_url = "mysql+pymysql://root:password@localhost/complex_db"
 metadata = connect_to_database(db_url)
