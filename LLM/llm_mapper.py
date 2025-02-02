@@ -1,6 +1,43 @@
-# llm_mapper.py
 import os
 from groq import Groq
+from urllib.parse import urlparse
+from sqlalchemy import create_engine, MetaData, Table
+
+
+def get_all_tables_from_db():
+    """
+    Reflect all tables in the database dynamically using SQLAlchemy.
+    """
+    db_url = "mysql+pymysql://root:vedant3006@localhost/complex_db"
+    parsed_url = urlparse(db_url)
+
+    user = parsed_url.username
+    password = parsed_url.password
+    host = parsed_url.hostname
+    port = parsed_url.port if parsed_url.port else 3306  # Default MySQL port
+    database = parsed_url.path[1:]  # Get the database name
+
+    # Create the SQLAlchemy engine to connect to the MySQL database
+    engine = create_engine(db_url)
+
+    # Use SQLAlchemy's MetaData to reflect all the tables in the database
+    metadata = MetaData()
+
+    # Reflect all tables in the database
+    metadata.reflect(bind=engine)
+
+    # Print the names of all tables in the database
+    tables = metadata.tables
+    print("Tables in the database:", tables.keys())
+
+    # Now, you can access and manipulate each table as a Table object.
+    for table_name, table in tables.items():
+        print(f"Table: {table_name}")
+        # Example: Accessing each column of a table
+        for column in table.columns:
+            print(f"  Column: {column.name}, Type: {column.type}")
+
+    return tables
 
 def map_to_kg_template(raw_text, kg_template, model="llama-3.3-70b-versatile", temperature=0.1, max_tokens=1024):
     """
@@ -16,6 +53,12 @@ def map_to_kg_template(raw_text, kg_template, model="llama-3.3-70b-versatile", t
     Returns:
       - str: The structured KG representation.
     """
+    # Get the latest database information (e.g., last primary key)
+    last_primary_key = get_all_tables_from_db()
+
+    # Set up dynamic context for the prompt
+    dynamic_info = f"The last primary key value in the database is {last_primary_key}."
+
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     
     prompt = f"""
@@ -32,13 +75,15 @@ Analyze the input text and map only the relevant information to the correspondin
 You do not need to fill in the entire template; only populate the sections that match the content in the raw text.
 Ensure that the entity relationships are correctly identified and mapped to the most suitable parts of the template.
 
+- Database Context:
+{dynamic_info}
+
 - Output:
 Return only the structured KG representation.
 """
 
-    
     chat_completion = client.chat.completions.create(
-        messages=[
+        messages=[ 
             {"role": "system", "content": "You are a structured data mapper for Knowledge Graphs."},
             {"role": "user", "content": prompt}
         ],

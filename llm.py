@@ -1,39 +1,56 @@
-# integration.py
 import os
+import networkx as nx
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
+from rdflib import Graph
 from KG.rd_graph import (
     connect_to_database,
     build_knowledge_graph,
-    convert_graph_to_rdf,
     generate_rdf_template_from_kg,
     visualize_knowledge_graph,
     save_rdf_to_file
 )
-from LLM.llm_mapper import map_to_kg_template
+from LLM.llm_mapper import map_to_kg_template 
+from LLM.preprocess import preprocess_text
 
-# Load environment variables (ensure GROQ_API_KEY is set in your .env file)
 load_dotenv()
 
+def plot_rdf_graph(rdf_graph):
+    nx_graph = nx.Graph()
+    
+    # Print RDF triples to debug
+    for subj, pred, obj in rdf_graph:
+        print(subj, pred, obj)  # Debugging line to print the RDF triples
+        subj_str = str(subj)
+        pred_str = str(pred)
+        obj_str = str(obj)
+        nx_graph.add_edge(subj_str, obj_str, label=pred_str)
+    
+    # Layout for more spacious plotting
+    pos = nx.spring_layout(nx_graph, k=0.3, seed=42)  # Adjust k for better spacing
+    nx.draw(nx_graph, pos, with_labels=True, node_size=3000, node_color="lightblue", font_size=10, font_weight="bold")
+    edge_labels = nx.get_edge_attributes(nx_graph, 'label')
+    nx.draw_networkx_edge_labels(nx_graph, pos, edge_labels=edge_labels)
+    plt.title("RDF Graph Visualization")
+    plt.show()
+
 def main():
-    # --- Database Connection & KG Building ---
     db_url = "mysql+pymysql://root:password@localhost/complex_db"
+    
+    # Check if connection is successful
     metadata = connect_to_database(db_url)
+    if not metadata:
+        print("Failed to connect to database")
+        return
+
     G = build_knowledge_graph(metadata)
     
-    # Optionally visualize the Knowledge Graph
-    #visualize_knowledge_graph(G)
+    if not G:
+        print("Failed to build knowledge graph")
+        return
     
-    # Optionally convert the KG to RDF and save it to a file
-    #rdf_graph = convert_graph_to_rdf(G)
-    #save_rdf_to_file(rdf_graph, filename="knowledge_graph.rdf")
-    
-    # --- Generate the RDF Template from the KG ---
     rdf_template = generate_rdf_template_from_kg(G)
-    #print("Generated RDF Template:\n")
-    #print(rdf_template)
     
-    # --- Define Raw Text for Mapping ---
-    # This raw text explains a user and their activity on the social media platform.
     raw_text = (
         "Alice is an active user on our social media platform. "
         "She registered on the platform in January 2022 and has been very active ever since. "
@@ -43,11 +60,31 @@ def main():
         "Later that day, she liked another post by one of her connections, showing her appreciation for the shared content. "
         "In addition to these activities, Alice updated her profile information and added new interests."
     )
+
+    text = preprocess_text(raw_text)
     
-    # --- Map the Raw Text to the RDF Template using the Groq LLM ---
-    kg_structured_output = map_to_kg_template(raw_text, rdf_template)
-    print("\nStructured KG Output from LLM:\n")
-    print(kg_structured_output)
+    # Map to RDF template and print output for debugging
+    kg_structured_output = map_to_kg_template(text, rdf_template)
+    print("Structured KG Output:", kg_structured_output)  # Debugging line
+    
+    # Remove any non-RDF information like the 'Note:' section
+    kg_structured_output = kg_structured_output.split("Note:")[0]  # Split and keep only the valid RDF part
+    
+    rdf_template_with_prefix = """
+    @prefix ex: <http://example.org/> . 
+    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . 
+    """ + kg_structured_output  # Add the cleaned RDF output
+    
+    rdf_graph = Graph()   
+    try:
+        rdf_graph.parse(data=rdf_template_with_prefix, format="ttl")
+    except Exception as e:
+        print("Error parsing RDF data:", e)
+        return
+    
+    # Visualize the RDF graph
+    plot_rdf_graph(rdf_graph)
 
 if __name__ == "__main__":
     main()
+
