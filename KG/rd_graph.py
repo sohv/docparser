@@ -1,4 +1,3 @@
-# kg_functions.py
 import os
 import sqlalchemy
 import networkx as nx
@@ -13,14 +12,12 @@ def connect_to_database(db_url):
 
 def build_knowledge_graph(metadata):
     G = nx.DiGraph()
-    # Add tables and their columns
     for table in metadata.tables.values():
         G.add_node(table.name, type="table")
         for column in table.columns:
             col_node = f"{table.name}.{column.name}"
             G.add_node(col_node, type="column")
             G.add_edge(table.name, col_node, relation="has_column")
-    # Add foreign key relationships
     for table in metadata.tables.values():
         for column in table.columns:
             if column.foreign_keys:
@@ -33,7 +30,6 @@ def convert_graph_to_rdf(G):
     rdf_graph = Graph()
     base_uri = "http://example.org/"
     
-    # Create RDF resources for tables and columns
     for node, attr in G.nodes(data=True):
         if attr.get("type") == "table":
             table_uri = URIRef(base_uri + node)
@@ -44,7 +40,6 @@ def convert_graph_to_rdf(G):
             rdf_graph.add((column_uri, RDF.type, URIRef(base_uri + "Column")))
             rdf_graph.add((column_uri, URIRef(base_uri + "has_name"), Literal(node.split('.')[-1])))
     
-    # Add relationships as RDF triples
     for u, v, data in G.edges(data=True):
         subject_uri = URIRef(base_uri + u)
         object_uri = URIRef(base_uri + v)
@@ -81,7 +76,6 @@ def generate_rdf_template_from_kg(G, base_uri="http://example.org/"):
     """
     template = "@prefix ex: <{base_uri}> .\n\n".format(base_uri=base_uri)
     
-    # Process table nodes
     for node, attr in G.nodes(data=True):
         if attr.get("type") == "table":
             template += f"### Entity: {node}\n"
@@ -98,7 +92,6 @@ def generate_rdf_template_from_kg(G, base_uri="http://example.org/"):
                 template += "    ex:has_columns " + ", ".join(columns) + " ;\n"
             template = template.rstrip(" ;\n") + " .\n\n"
     
-    # Process column nodes
     for node, attr in G.nodes(data=True):
         if attr.get("type") == "column":
             try:
@@ -108,7 +101,6 @@ def generate_rdf_template_from_kg(G, base_uri="http://example.org/"):
             template += f"ex:{table}_{col} a ex:Column ;\n"
             template += f'    ex:has_name "{{{table}_{col}_has_name}}" .\n\n'
     
-    # Add foreign key relationships
     for u, v, data in G.edges(data=True):
         if data.get("relation") == "foreign_key":
             template += f"ex:{u} ex:foreign_key ex:{v} .\n"
