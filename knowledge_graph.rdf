@@ -1,0 +1,123 @@
+@prefix ns1: <http://example.org/> .
+
+ns1:comments a ns1:Table ;
+    ns1:foreign_key ns1:posts,
+        ns1:users ;
+    ns1:has_column ns1:comments.comment_id,
+        ns1:comments.comment_text,
+        ns1:comments.created_at,
+        ns1:comments.post_id,
+        ns1:comments.user_id ;
+    ns1:has_name "comments" .
+
+ns1:friends a ns1:Table ;
+    ns1:foreign_key ns1:users ;
+    ns1:has_column ns1:friends.connected_at,
+        ns1:friends.friend_id,
+        ns1:friends.user_id ;
+    ns1:has_name "friends" .
+
+ns1:likes a ns1:Table ;
+    ns1:foreign_key ns1:posts,
+        ns1:users ;
+    ns1:has_column ns1:likes.liked_at,
+        ns1:likes.post_id,
+        ns1:likes.user_id ;
+    ns1:has_name "likes" .
+
+ns1:post_tags a ns1:Table ;
+    ns1:foreign_key ns1:posts,
+        ns1:tags ;
+    ns1:has_column ns1:post_tags.post_id,
+        ns1:post_tags.tag_id ;
+    ns1:has_name "post_tags" .
+
+ns1:comments.comment_id a ns1:Column ;
+    ns1:has_name "comment_id" .
+
+ns1:comments.comment_text a ns1:Column ;
+    ns1:has_name "comment_text" .
+
+ns1:comments.created_at a ns1:Column ;
+    ns1:has_name "created_at" .
+
+ns1:comments.post_id a ns1:Column ;
+    ns1:has_name "post_id" .
+
+ns1:comments.user_id a ns1:Column ;
+    ns1:has_name "user_id" .
+
+ns1:friends.connected_at a ns1:Column ;
+    ns1:has_name "connected_at" .
+
+ns1:friends.friend_id a ns1:Column ;
+    ns1:has_name "friend_id" .
+
+ns1:friends.user_id a ns1:Column ;
+    ns1:has_name "user_id" .
+
+ns1:likes.liked_at a ns1:Column ;
+    ns1:has_name "liked_at" .
+
+ns1:likes.post_id a ns1:Column ;
+    ns1:has_name "post_id" .
+
+ns1:likes.user_id a ns1:Column ;
+    ns1:has_name "user_id" .
+
+ns1:post_tags.post_id a ns1:Column ;
+    ns1:has_name "post_id" .
+
+ns1:post_tags.tag_id a ns1:Column ;
+    ns1:has_name "tag_id" .
+
+ns1:posts.content a ns1:Column ;
+    ns1:has_name "content" .
+
+ns1:posts.created_at a ns1:Column ;
+    ns1:has_name "created_at" .
+
+ns1:posts.post_id a ns1:Column ;
+    ns1:has_name "post_id" .
+
+ns1:posts.user_id a ns1:Column ;
+    ns1:has_name "user_id" .
+
+ns1:tags a ns1:Table ;
+    ns1:has_column ns1:tags.tag_id,
+        ns1:tags.tag_name ;
+    ns1:has_name "tags" .
+
+ns1:tags.tag_id a ns1:Column ;
+    ns1:has_name "tag_id" .
+
+ns1:tags.tag_name a ns1:Column ;
+    ns1:has_name "tag_name" .
+
+ns1:users.created_at a ns1:Column ;
+    ns1:has_name "created_at" .
+
+ns1:users.email a ns1:Column ;
+    ns1:has_name "email" .
+
+ns1:users.name a ns1:Column ;
+    ns1:has_name "name" .
+
+ns1:users.user_id a ns1:Column ;
+    ns1:has_name "user_id" .
+
+ns1:posts a ns1:Table ;
+    ns1:foreign_key ns1:users ;
+    ns1:has_column ns1:posts.content,
+        ns1:posts.created_at,
+        ns1:posts.post_id,
+        ns1:posts.user_id ;
+    ns1:has_name "posts" .
+
+ns1:users a ns1:Table ;
+    ns1:has_column ns1:users.created_at,
+        ns1:users.email,
+        ns1:users.name,
+        ns1:users.user_id ;
+    ns1:has_name "users" .
+
