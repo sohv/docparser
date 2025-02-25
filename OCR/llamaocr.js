@@ -12,7 +12,7 @@ async function runOCR() {
 
     console.log("OCR Result:\n", markdown);
   } catch (error) {
-    console.error("❌ OCR failed:", error);
+    console.error("OCR failed:", error);
   }
 }
 
